@@ -90,3 +90,5 @@ target/
 
 myenv/
 /experiment_info.json
+/lgbm_model.pkl
+/tfidf_vectorizer.pkl

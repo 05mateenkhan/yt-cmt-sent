@@ -7,3 +7,7 @@ lightgbm
 mlflow
 dagshub
 seaborn
+flask_cors
+flask
+joblib
+wordcloud
