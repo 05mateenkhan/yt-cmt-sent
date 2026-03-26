@@ -16,7 +16,7 @@ import dagshub
 from dotenv import load_dotenv
 load_dotenv()
 
-os.environ["MLFLOW_TRACKING_USERNAME"] = "05mateenkhan"
+os.environ["MLFLOW_TRACKING_USERNAME"] = os.getenv("DAGSHUB_TOKEN")
 os.environ["MLFLOW_TRACKING_PASSWORD"] = os.getenv("DAGSHUB_TOKEN")
 
 # logging configuration
