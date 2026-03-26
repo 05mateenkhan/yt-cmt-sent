@@ -5,7 +5,11 @@ on: push
 jobs:
   model-deployment:
     runs-on: ubuntu-latest
-
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: us-east-1  # Replace with your AWS region
+      DAGSHUB_TOKEN: ${{ secrets.DAGSHUB_TOKEN }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
