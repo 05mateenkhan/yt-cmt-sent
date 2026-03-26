@@ -1,16 +1,13 @@
 dagshub==0.6.9
 Flask==1.1.2
 flask_cors==6.0.2
-joblib==1.5.2
 joblib==1.5.3
 lightgbm==4.6.0
 matplotlib==3.10.8
-mlflow==3.10.0
 mlflow==3.10.1
 mlflow_skinny==3.10.1
 mlflow_tracing==3.10.1
 nltk==3.9.4
-numpy==1.24.4
 numpy==1.23.5
 pandas==3.0.1
 python-dotenv==1.2.2
