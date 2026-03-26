@@ -9,9 +9,10 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-os.environ["MLFLOW_TRACKING_USERNAME"] = "05mateenkhan"
+os.environ["MLFLOW_TRACKING_USERNAME"] = os.getenv("DAGSHUB_TOKEN")
 os.environ["MLFLOW_TRACKING_PASSWORD"] = os.getenv("DAGSHUB_TOKEN")
-dagshub.init(repo_owner='05mateenkhan', repo_name='comments-analyzer', mlflow=True)
+# dagshub.init(repo_owner='05mateenkhan', repo_name='comments-analyzer', mlflow=True)
+mlflow.set_tracking_uri("https://dagshub.com/05mateenkhan/comments-analyzer.mlflow")
 # Set up MLflow tracking URI
 # mlflow.set_tracking_uri("http://ec2-54-196-109-131.compute-1.amazonaws.com:5000/")
 
