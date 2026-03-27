@@ -1,4 +1,0 @@
-[core]
-    remote = myremote
-['remote "myremote"']
-    url = C:\Users\05mat\AppData\Local\Temp
