@@ -1,6 +1,6 @@
 [core]
     remote = myremote
 ['remote "myremote"']
-    url = s3://yt-sent-alany-buck
+    url = s3://yt-sent-analy-buck
 ['remote "myawsremote"']
     url = s3://yt-sent-alany-buck
