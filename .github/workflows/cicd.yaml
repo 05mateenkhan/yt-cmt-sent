@@ -8,7 +8,7 @@ jobs:
     env:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      AWS_DEFAULT_REGION: us-east-1  # Replace with your AWS region
+      AWS_DEFAULT_REGION: eu-north-1  # Replace with your AWS region
       DAGSHUB_TOKEN: ${{ secrets.DAGSHUB_TOKEN }}
     steps:
       - name: Checkout code
@@ -37,7 +37,7 @@ jobs:
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: us-east-1  # Replace with your AWS region
+          AWS_DEFAULT_REGION: eu-north-1  # Replace with your AWS region
           DAGSHUB_TOKEN: ${{ secrets.DAGSHUB_TOKEN }}
         run: |
           dvc repro
@@ -49,7 +49,7 @@ jobs:
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: us-east-1  # Replace with your AWS region
+          AWS_DEFAULT_REGION: eu-north-1  # Replace with your AWS region
         run: |
           dvc push
 
@@ -85,7 +85,7 @@ jobs:
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: us-east-1
+          AWS_DEFAULT_REGION: eu-north-1
         run: |
           pytest scripts/test_load_model.py
 
@@ -93,7 +93,7 @@ jobs:
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: us-east-1
+          AWS_DEFAULT_REGION: eu-north-1
         run: |
           pytest scripts/test_model_signature.py
 
@@ -101,7 +101,7 @@ jobs:
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: us-east-1
+          AWS_DEFAULT_REGION: eu-north-1
         run: |
           pytest scripts/test_model_performance.py
 
@@ -110,7 +110,7 @@ jobs:
       #   env:
       #     AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       #     AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      #     AWS_DEFAULT_REGION: us-east-1
+      #     AWS_DEFAULT_REGION: eu-north-1
       #   run: python scripts/promote_model.py
 
       
@@ -124,7 +124,7 @@ jobs:
       #   run: |
       #     aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
       #     aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      #     aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 390844758498.dkr.ecr.us-east-1.amazonaws.com
+      #     aws ecr get-login-password --region eu-north-1 | docker login --username AWS --password-stdin 390844758498.dkr.ecr.eu-north-1.amazonaws.com
 
       # - name: Build Docker image
       #   if: success()
@@ -134,12 +134,12 @@ jobs:
       # - name: Tag Docker image
       #   if: success()
       #   run: |
-      #     docker tag yt-chrome-plugin:latest 390844758498.dkr.ecr.us-east-1.amazonaws.com/yt-chrome-plugin:latest
+      #     docker tag yt-chrome-plugin:latest 390844758498.dkr.ecr.eu-north-1.amazonaws.com/yt-chrome-plugin:latest
 
       # - name: Push Docker image to AWS ECR
       #   if: success()
       #   run: |
-      #     docker push 390844758498.dkr.ecr.us-east-1.amazonaws.com/yt-chrome-plugin:latest
+      #     docker push 390844758498.dkr.ecr.eu-north-1.amazonaws.com/yt-chrome-plugin:latest
 
       # # Zip the required files
       # - name: Zip files for deployment
@@ -165,4 +165,4 @@ jobs:
       #       --deployment-group-name YTChromePluginDeploymentGroup \
       #       --s3-location bucket=campusxcodedeploybucket,key=deployment.zip,bundleType=zip \
       #       --file-exists-behavior OVERWRITE \
-      #       --region us-east-1
+      #       --region eu-north-1
