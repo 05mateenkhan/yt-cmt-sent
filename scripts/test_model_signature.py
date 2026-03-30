@@ -15,7 +15,7 @@ mlflow.set_tracking_uri("https://dagshub.com/05mateenkhan/comments-analyzer.mlfl
 @pytest.mark.parametrize("model_name, stage", [
     ("yt_chrome_plugin_model", "Staging"),
 ])
-def test_model_pipeline(model_name, stage):
+def test_model_pipeline(model_name, stage): 
     client = MlflowClient()
 
     # Get latest model version
