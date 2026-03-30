@@ -5,7 +5,16 @@ from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_sc
 import mlflow
 
 # Set your remote tracking URI
-mlflow.set_tracking_uri("http://ec2-54-196-109-131.compute-1.amazonaws.com:5000/")
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+os.environ["MLFLOW_TRACKING_USERNAME"] = os.getenv("DAGSHUB_TOKEN")
+os.environ["MLFLOW_TRACKING_PASSWORD"] = os.getenv("DAGSHUB_TOKEN")
+# dagshub.init(repo_owner='05mateenkhan', repo_name='comments-analyzer', mlflow=True)
+mlflow.set_tracking_uri("https://dagshub.com/05mateenkhan/comments-analyzer.mlflow")
+# mlflow.set_tracking_uri("http://ec2-54-196-109-131.compute-1.amazonaws.com:5000/")
 
 @pytest.mark.parametrize("model_name, stage, holdout_data_path, vectorizer_path", [
     ("yt_chrome_plugin_model", "staging", "data/interim/test_processed.csv", "tfidf_vectorizer.pkl"),  # Replace with your actual paths
