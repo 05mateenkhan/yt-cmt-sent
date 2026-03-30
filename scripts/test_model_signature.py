@@ -3,7 +3,7 @@ import pytest
 from mlflow.tracking import MlflowClient
 import os
 from dotenv import load_dotenv
-
+import numpy as np
 load_dotenv()
 
 os.environ["MLFLOW_TRACKING_USERNAME"] = os.getenv("DAGSHUB_TOKEN")
@@ -30,7 +30,7 @@ def test_model_pipeline(model_name, stage):
         model = mlflow.pyfunc.load_model(model_uri)
 
         # ✅ Correct input format (1D list of strings)
-        input_data = ["hi how are you", "this is bad", "awesome video"]
+        input_data = np.array(["hi how are you", "this is bad", "awesome video"])
 
         # Predict
         predictions = model.predict(input_data)
