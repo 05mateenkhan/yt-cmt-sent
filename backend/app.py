@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 from wordcloud import WordCloud
 import mlflow
 import numpy as np
+import pandas as pd
 import joblib
 import re
 import pandas as pd
@@ -35,7 +36,8 @@ app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
 
 
-dagshub.init(repo_owner='05mateenkhan', repo_name='comments-analyzer', mlflow=True)
+# dagshub.init(repo_owner='05mateenkhan', repo_name='comments-analyzer', mlflow=True)
+mlflow.set_tracking_uri("https://dagshub.com/05mateenkhan/comments-analyzer.mlflow")
 
 
 def preprocess_comment(comment):
@@ -99,13 +101,13 @@ def load_model(model_name, model_version):
     model_uri = f"models:/{model_name}/{model_version}"
     model = mlflow.pyfunc.load_model(model_uri)
     root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '.././'))
-    model1 = load_model1(os.path.join(root_dir, 'lgbm_model.pkl'))
+    # model1 = load_model1(os.path.join(root_dir, 'lgbm_model.pkl'))
 
     return model
 
 
 # model, vectorizer = load_model_and_vectorizer("yt_chrome_plugin_model", "1", "./tfidf_vectorizer.pkl")  # Update paths and versions as needed
-model = load_model("yt_chrome_plugin_model", "5")  # Update paths and versions as needed
+model = load_model("yt_chrome_plugin_model", "15")  # Update paths and versions as needed
 
 
 @app.route('/')
@@ -132,7 +134,9 @@ def predict_with_timestamps():
         # transformed_comments = vectorizer.transform(preprocessed_comments)
         
         # Make predictions
-        predictions = model.predict(preprocessed_comments).tolist()  # Convert to list
+        df = pd.DataFrame(preprocessed_comments, columns=["clean_comment"])
+        predictions = model.predict(df).tolist()
+        # predictions = model.predict(preprocessed_comments).tolist()  # Convert to list
         
         # Convert predictions to strings for consistency
         predictions = [str(pred) for pred in predictions]
@@ -161,7 +165,9 @@ def predict():
         
         # Make predictions
         print(preprocessed_comments)
-        predictions = model.predict(preprocessed_comments).tolist()  # Convert to list
+        df = pd.DataFrame(preprocessed_comments, columns=["clean_comment"])
+        predictions = model.predict(df).tolist()
+        # predictions = model.predict(preprocessed_comments).tolist()  # Convert to list
         
         # Convert predictions to strings for consistency
         predictions = [str(pred) for pred in predictions]
