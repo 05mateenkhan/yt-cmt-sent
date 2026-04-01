@@ -60,7 +60,7 @@ stages:
     outs:
     - path: lgbm_model.pkl
       hash: md5
-      md5: 2e58728585a9d5646cc3eee7bd1c56b4
+      md5: bffba822aa644e2caed36b6546514664
       size: 4507827
   model_evaluation:
     cmd: python src/model/model_evaluation.py
@@ -75,7 +75,7 @@ stages:
       size: 4100594
     - path: lgbm_model.pkl
       hash: md5
-      md5: 2e58728585a9d5646cc3eee7bd1c56b4
+      md5: bffba822aa644e2caed36b6546514664
       size: 4507827
     - path: src/model/model_evaluation.py
       hash: md5
@@ -84,14 +84,14 @@ stages:
     outs:
     - path: experiment_info.json
       hash: md5
-      md5: 06990a63f98d7a232bdf252d948286c2
+      md5: 72c4d78d05dd34bf9657e583c2adcd39
       size: 123
   model_registration:
     cmd: python src/model/register_model.py
     deps:
     - path: experiment_info.json
       hash: md5
-      md5: 06990a63f98d7a232bdf252d948286c2
+      md5: 72c4d78d05dd34bf9657e583c2adcd39
       size: 123
     - path: src/model/register_model.py
       hash: md5
