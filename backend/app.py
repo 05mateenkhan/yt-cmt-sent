@@ -3,8 +3,9 @@
 import matplotlib
 matplotlib.use('Agg')  # Use non-interactive backend before importing pyplot
 
-from flask import Flask, request, jsonify, send_file
-from flask_cors import CORS
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 import io
 import matplotlib.pyplot as plt
 from wordcloud import WordCloud
@@ -25,6 +26,8 @@ import dagshub
 from dotenv import load_dotenv
 import os
 import pickle
+from pydantic import BaseModel
+from typing import List, Optional
 load_dotenv()
 
 
@@ -32,15 +35,71 @@ os.environ["MLFLOW_TRACKING_USERNAME"] = "05mateenkhan"
 os.environ["MLFLOW_TRACKING_PASSWORD"] = os.getenv("DAGSHUB_TOKEN")
 
 
-app = Flask(__name__)
-CORS(app)  # Enable CORS for all routes
+app = FastAPI()
+
+# Enable CORS for all routes
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 # dagshub.init(repo_owner='05mateenkhan', repo_name='comments-analyzer', mlflow=True)
 mlflow.set_tracking_uri("https://dagshub.com/05mateenkhan/comments-analyzer.mlflow")
 
 
-def preprocess_comment(comment):
+# Pydantic models for request/response
+class CommentItem(BaseModel):
+    text: str
+    timestamp: Optional[str] = None
+
+
+class CommentsRequest(BaseModel):
+    comments: List[str]
+
+
+class CommentsWithTimestampsRequest(BaseModel):
+    comments: List[CommentItem]
+
+
+class SentimentResponse(BaseModel):
+    comment: str
+    sentiment: str
+
+
+class SentimentWithTimestampResponse(BaseModel):
+    comment: str
+    sentiment: str
+    timestamp: Optional[str] = None
+
+
+class SentimentCounts(BaseModel):
+    positive: Optional[int] = 0
+    neutral: Optional[int] = 0
+    negative: Optional[int] = 0
+
+
+class GenerateChartRequest(BaseModel):
+    sentiment_counts: dict
+
+
+class GenerateWordcloudRequest(BaseModel):
+    comments: List[str]
+
+
+class SentimentDataItem(BaseModel):
+    timestamp: str
+    sentiment: int
+
+
+class GenerateTrendGraphRequest(BaseModel):
+    sentiment_data: List[SentimentDataItem]
+
+
+def preprocess_comment(comment: str) -> str:
     """Apply preprocessing transformations to a comment."""
     try:
         # Convert to lowercase
@@ -69,22 +128,6 @@ def preprocess_comment(comment):
         return comment
 
 
-# def load_model(model_name, model_version):
-    
-#     model_uri = f'models:/{model_name}/{model_version}'
-#     model = mlflow.pyfunc.load_model(model_uri)
-#     return model
-
-
-# Load the model and vectorizer from the model registry and local storage
-# def load_model_and_vectorizer(model_name, model_version, vectorizer_path):
-#     client = MlflowClient()
-#     model_uri = f"models:/{model_name}/{model_version}"
-#     model = mlflow.pyfunc.load_model(model_uri)
-#     vectorizer = joblib.load(vectorizer_path)  # Load the vectorizer
-#     return model, vectorizer
-
-
 def load_model1(model_path: str):
     """Load the trained model."""
     try:
@@ -95,13 +138,11 @@ def load_model1(model_path: str):
         raise
 
 
+def load_model(model_name: str, model_version: str):
 
-def load_model(model_name, model_version):
-    
     model_uri = f"models:/{model_name}/{model_version}"
     model = mlflow.pyfunc.load_model(model_uri)
     root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '.././'))
-    # model1 = load_model1(os.path.join(root_dir, 'lgbm_model.pkl'))
 
     return model
 
@@ -110,83 +151,78 @@ def load_model(model_name, model_version):
 model = load_model("yt_chrome_plugin_model", "15")  # Update paths and versions as needed
 
 
-@app.route('/')
+@app.get("/")
 def home():
-    return "Welcome to our flask api"
+    return {"message": "Welcome to our FastAPI"}
 
 
-@app.route('/predict_with_timestamps', methods=['POST'])
-def predict_with_timestamps():
-    data = request.json
-    comments_data = data.get('comments')
-    
+@app.post("/predict_with_timestamps")
+def predict_with_timestamps(request: CommentsWithTimestampsRequest):
+    comments_data = request.comments
+
     if not comments_data:
-        return jsonify({"error": "No comments provided"}), 400
+        raise HTTPException(status_code=400, detail="No comments provided")
 
     try:
-        comments = [item['text'] for item in comments_data]
-        timestamps = [item['timestamp'] for item in comments_data]
+        comments = [item.text for item in comments_data]
+        timestamps = [item.timestamp for item in comments_data]
 
         # Preprocess each comment before vectorizing
         preprocessed_comments = [preprocess_comment(comment) for comment in comments]
-        
-        # Transform comments using the vectorizer
-        # transformed_comments = vectorizer.transform(preprocessed_comments)
-        
+
         # Make predictions
         df = pd.DataFrame(preprocessed_comments, columns=["clean_comment"])
         predictions = model.predict(df).tolist()
-        # predictions = model.predict(preprocessed_comments).tolist()  # Convert to list
-        
+
         # Convert predictions to strings for consistency
         predictions = [str(pred) for pred in predictions]
     except Exception as e:
-        return jsonify({"error": f"Prediction failed: {str(e)}"}), 500
-    
+        raise HTTPException(status_code=500, detail=f"Prediction failed: {str(e)}")
+
     # Return the response with original comments, predicted sentiments, and timestamps
-    response = [{"comment": comment, "sentiment": sentiment, "timestamp": timestamp} for comment, sentiment, timestamp in zip(comments, predictions, timestamps)]
-    return jsonify(response)
+    response = [
+        {"comment": comment, "sentiment": sentiment, "timestamp": timestamp}
+        for comment, sentiment, timestamp in zip(comments, predictions, timestamps)
+    ]
+    return response
 
 
-@app.route('/predict', methods=['POST'])
-def predict():
-    data = request.json
-    comments = data.get('comments')
-    
+@app.post("/predict")
+def predict(request: CommentsRequest):
+    comments = request.comments
+
     if not comments:
-        return jsonify({"error": "No comments provided"}), 400
+        raise HTTPException(status_code=400, detail="No comments provided")
 
     try:
         # Preprocess each comment before vectorizing
         preprocessed_comments = [preprocess_comment(comment) for comment in comments]
-        
-        # Transform comments using the vectorizer
-        # transformed_comments = vectorizer.transform(preprocessed_comments)
-        
+
         # Make predictions
         print(preprocessed_comments)
         df = pd.DataFrame(preprocessed_comments, columns=["clean_comment"])
         predictions = model.predict(df).tolist()
-        # predictions = model.predict(preprocessed_comments).tolist()  # Convert to list
-        
+
         # Convert predictions to strings for consistency
         predictions = [str(pred) for pred in predictions]
     except Exception as e:
-        return jsonify({"error": f"Prediction failed: {str(e)}"}), 500
-    
+        raise HTTPException(status_code=500, detail=f"Prediction failed: {str(e)}")
+
     # Return the response with original comments and predicted sentiments
-    response = [{"comment": comment, "sentiment": sentiment} for comment, sentiment in zip(comments, predictions)]
-    return jsonify(response)
+    response = [
+        {"comment": comment, "sentiment": sentiment}
+        for comment, sentiment in zip(comments, predictions)
+    ]
+    return response
 
 
-@app.route('/generate_chart', methods=['POST'])
-def generate_chart():
+@app.post("/generate_chart")
+def generate_chart(request: GenerateChartRequest):
     try:
-        data = request.get_json()
-        sentiment_counts = data.get('sentiment_counts')
-        
+        sentiment_counts = request.sentiment_counts
+
         if not sentiment_counts:
-            return jsonify({"error": "No sentiment counts provided"}), 400
+            raise HTTPException(status_code=400, detail="No sentiment counts provided")
 
         # Prepare data for the pie chart
         labels = ['Positive', 'Neutral', 'Negative']
@@ -197,7 +233,7 @@ def generate_chart():
         ]
         if sum(sizes) == 0:
             raise ValueError("Sentiment counts sum to zero")
-        
+
         colors = ['#36A2EB', '#C9CBCF', '#FF6384']  # Blue, Gray, Red
 
         # Generate the pie chart
@@ -219,20 +255,18 @@ def generate_chart():
         plt.close()
 
         # Return the image as a response
-        return send_file(img_io, mimetype='image/png')
+        return StreamingResponse(img_io, media_type="image/png")
     except Exception as e:
-        app.logger.error(f"Error in /generate_chart: {e}")
-        return jsonify({"error": f"Chart generation failed: {str(e)}"}), 500
+        raise HTTPException(status_code=500, detail=f"Chart generation failed: {str(e)}")
 
 
-@app.route('/generate_wordcloud', methods=['POST'])
-def generate_wordcloud():
+@app.post("/generate_wordcloud")
+def generate_wordcloud(request: GenerateWordcloudRequest):
     try:
-        data = request.get_json()
-        comments = data.get('comments')
+        comments = request.comments
 
         if not comments:
-            return jsonify({"error": "No comments provided"}), 400
+            raise HTTPException(status_code=400, detail="No comments provided")
 
         # Preprocess comments
         preprocessed_comments = [preprocess_comment(comment) for comment in comments]
@@ -256,23 +290,21 @@ def generate_wordcloud():
         img_io.seek(0)
 
         # Return the image as a response
-        return send_file(img_io, mimetype='image/png')
+        return StreamingResponse(img_io, media_type="image/png")
     except Exception as e:
-        app.logger.error(f"Error in /generate_wordcloud: {e}")
-        return jsonify({"error": f"Word cloud generation failed: {str(e)}"}), 500
+        raise HTTPException(status_code=500, detail=f"Word cloud generation failed: {str(e)}")
 
 
-@app.route('/generate_trend_graph', methods=['POST'])
-def generate_trend_graph():
+@app.post("/generate_trend_graph")
+def generate_trend_graph(request: GenerateTrendGraphRequest):
     try:
-        data = request.get_json()
-        sentiment_data = data.get('sentiment_data')
+        sentiment_data = request.sentiment_data
 
         if not sentiment_data:
-            return jsonify({"error": "No sentiment data provided"}), 400
+            raise HTTPException(status_code=400, detail="No sentiment data provided")
 
         # Convert sentiment_data to DataFrame
-        df = pd.DataFrame(sentiment_data)
+        df = pd.DataFrame([item.model_dump() for item in sentiment_data])
         df['timestamp'] = pd.to_datetime(df['timestamp'])
 
         # Set the timestamp as the index
@@ -340,12 +372,11 @@ def generate_trend_graph():
         plt.close()
 
         # Return the image as a response
-        return send_file(img_io, mimetype='image/png')
+        return StreamingResponse(img_io, media_type="image/png")
     except Exception as e:
-        app.logger.error(f"Error in /generate_trend_graph: {e}")
-        return jsonify({"error": f"Trend graph generation failed: {str(e)}"}), 500
+        raise HTTPException(status_code=500, detail=f"Trend graph generation failed: {str(e)}")
 
 
-  
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=5000)
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=5000)
