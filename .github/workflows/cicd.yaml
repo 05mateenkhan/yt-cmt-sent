@@ -145,17 +145,17 @@ jobs:
           docker push ${{ secrets.DOCKER_USERNAME }}/yt-cmt-sent:latest
 
 
-      - name: Deploy to EC2
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_KEY }}
-          script: |
-            docker pull ${{ secrets.DOCKER_USERNAME }}/yt-cmt-sent:latest
-            docker stop yt-app || true
-            docker rm yt-app || true
-            docker run -d -p 80:5000 -e DAGSHUB_TOKEN=${{ secrets.DAGSHUB_TOKEN }} mateenkhan14/yt-cmt-sent:latest
+      # - name: Deploy to EC2
+      #   uses: appleboy/ssh-action@v1.0.3
+      #   with:
+      #     host: ${{ secrets.EC2_HOST }}
+      #     username: ${{ secrets.EC2_USER }}
+      #     key: ${{ secrets.EC2_KEY }}
+      #     script: |
+      #       docker pull ${{ secrets.DOCKER_USERNAME }}/yt-cmt-sent:latest
+      #       docker stop yt-app || true
+      #       docker rm yt-app || true
+      #       docker run -d -p 80:5000 -e DAGSHUB_TOKEN=${{ secrets.DAGSHUB_TOKEN }} mateenkhan14/yt-cmt-sent:latest
 
       # - name: Login to AWS ECR
       #   if: success()
