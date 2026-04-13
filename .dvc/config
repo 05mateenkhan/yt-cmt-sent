@@ -1,6 +1,6 @@
 [core]
     remote = myremote
 ['remote "myremote"']
-    url = s3://yt-sent-analy-buck
+    url = C:\Users\05mat\AppData\Local\Temp
 ['remote "myawsremote"']
     url = s3://yt-sent-alany-buck
